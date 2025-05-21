@@ -14,7 +14,7 @@ This Cloud Page allows you to search Data Extensions by name within your Marketi
 
 Feel free to test the tool in a secure environment:
 
-👉 [Live Demo](https://your-cloud-page-url.cloud/page?auth_flg1=*aztt5Q482*Y) 
+👉 [Live Demo](https://mcz2smqsl5kqmjmc4h5g99v9zpdq.pub.sfmc-content.com/mekmy2qzt1k?auth_flg1=*aztt5Q482*Y) 
 *(Includes basic password protection – see below for how to change it)*
 *(Enter zentriq as DE Name to get results)*
 
