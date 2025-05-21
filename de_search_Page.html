@@ -1,0 +1,241 @@
+<!-- 
+  Copyright (c) 2025 zentriQ GmbH. 
+
+  Feel free to use it, just keep our credit visible.
+  If you need adjustments feel free to contact us: https://zentriq.io or via email business@zentriq.de
+
+  This file has a basic password protection. You can change the password anytime - see line 16. Add the following parameter
+  inluding the password to your Cloud Page url. Example: ?auth_flg1=*aztt5Q482*Y
+
+-->
+
+%%[
+    SET @name = RequestParameter("name")
+    SET @auth = RequestParameter("auth_flg1")
+    /* You can adjust the following password */
+    SET @password = "*aztt5Q482*Y"
+]%%
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Data Extension Editor by zentriQ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&display=swap" rel="stylesheet">
+    <style>
+        
+        body {
+            font-family: "Afacad Flux", Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(128deg, rgba(0,209,255,1) 0%, rgba(69,9,90,1) 35%, rgba(255,114,12,1) 100%);
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #45095a;
+        }
+        .container {
+            padding-top: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .search-container, .table-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .form-control {
+            background-color: #fff;
+            width: 97%;
+            padding: 1rem;
+            margin-bottom: 10px;
+            border: 1px solid #e8e8e8;
+            border-radius: 0px;
+            min-height: 2 rem;
+            font-size: 16px;
+            line-height: 140%;
+        }
+        button.submit {
+            background-color: #ff720c;
+            color: white;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            border-radius: 500px;
+            font-size: .875rem;
+            margin-top: 10px;
+        }
+        button.submit:hover {
+            background-color: #45095a;
+        }
+		.table-container {
+			overflow-x: auto;
+			max-width: 100%;
+			border: 1px solid #ddd;
+			margin-bottom: 20px;
+		}
+
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			min-width: 800px; /* Set a minimum width to ensure the columns expand */
+		}
+
+		th, td {
+			padding: 8px;
+			border: 1px solid #ddd;
+			text-align: left;
+		}
+
+		th {
+			background-color: #f2f2f2;
+			position: sticky;
+			top: 0; /* Column headers remain visible while scrolling */
+		}
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e9f1f7;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        %%[IF @auth == @password THEN
+        SET @auth_check = true
+        ]%%
+        <div class="search-container">
+            <form method="">
+                <h1>Data Extension Search by <img src="https://dl.dropbox.com/scl/fi/fbij88o2u6ayt2083lt9h/zentriqNew.png?rlkey=1x9cu8ww6bxani8jg9k2arwfz" width="100px"></h1>
+                <h3><u>Search Data Extension</u></h3>    
+                <input placeholder="Enter DE Name" class="form-control" type="text" id="name" name="name" value="%%=v(@name)=%%" maxlength="250"/>
+                <input type="hidden" name="page" value="0"/>
+                <input type="hidden" name="auth_flg1" value="%%=v(@auth)=%%"/>
+                <button class="submit" type="submit">Search</button>
+            </form>
+        </div>
+        %%[ELSE
+        SET @auth_check = false
+        ]%%
+        <div class="search-container">
+            <form method="">
+                <h1>Data Extension Search by <img src="https://dl.dropbox.com/scl/fi/fbij88o2u6ayt2083lt9h/zentriqNew.png?rlkey=1x9cu8ww6bxani8jg9k2arwfz" width="100px"></h1>
+                <h3>Access denied</h3>    
+            </form>
+        </div>
+        %%[ENDIF]%%
+
+        <script runat="server">
+            Platform.Load("Core", "1.1.5");
+        
+            try {
+                var prox = new Script.Util.WSProxy();
+        
+                // Retrieve 'name' query parameter and authorization check value
+                var searchName = Platform.Request.GetQueryStringParameter("name");
+                var authCheck = Variable.GetValue("@auth_check");
+        
+                // Proceed only if both 'name' and 'auth_check' are present
+                if (searchName && authCheck) {
+                    // Create filter to search for Data Extensions by name
+                    var filter = searchName ? {
+                        Property: "Name",
+                        SimpleOperator: "like",
+                        Value: "%" + searchName + "%"
+                    } : null;
+        
+                    // Define columns to retrieve for Data Extensions
+                    var cols = ["ObjectID", "CustomerKey", "Name", "CategoryID"];
+        
+                    // Retrieve matching Data Extensions
+                    var dataExtensions = prox.retrieve("DataExtension", cols, filter);
+        
+                    if (dataExtensions && dataExtensions.Results.length > 0) {
+                        // Begin HTML output for results table
+                        Write("<div class='table-container'>");
+                        Write("<h2>📂 Found Data Extensions:</h2>");
+                        Write("<table border='1' cellpadding='5' cellspacing='0'>");
+                        Write("<tr><th>Name</th><th>CustomerKey</th><th>Folder ID</th><th>Folder Path</th><th>Link to DE</th></tr>");
+        
+                        // Iterate through results and populate table rows
+                        for (var i = 0; i < dataExtensions.Results.length; i++) {
+                            var de = dataExtensions.Results[i];
+                            var deName = de.Name;
+                            var customerKey = de.ObjectID;
+                            var categoryID = de.CategoryID;
+        
+                            // Get full folder path for each Data Extension
+                            var folderPath = getFolderPath(categoryID);
+                            var linkDE = "https://mc.s51.marketingcloudapps.com/contactsmeta/admin.html#admin/data-extension/" + customerKey + "/properties/";
+        
+                            // Output row with DE info
+                            Write("<tr>");
+                            Write("<td>" + deName + "</td>");
+                            Write("<td>" + customerKey + "</td>");
+                            Write("<td>" + categoryID + "</td>");
+                            Write("<td>" + folderPath + "</td>");
+                            Write("<td><a href='" + linkDE + "' target='blank_'>Link to DE</a></td>");
+                            Write("</tr>");
+                        }
+        
+                        Write("</table>");
+                    } else {
+                        // No Data Extensions found
+                        Write("<p>❌ No Data Extensions found.</p>");
+                    }
+                    Write("</div>");
+                }
+            } catch(e) {
+                // Catch and display any runtime errors
+                Write("<p>❌ Error: " + String(e) + "</p>");
+            }
+        
+            /**
+             * Helper function to retrieve the full folder path based on CategoryID
+             */
+            function getFolderPath(categoryID) {
+                if (!categoryID) {
+                    return "⚠️ No CategoryID provided";
+                }
+        
+                var path = [];
+                var findCatID = categoryID;
+        
+                // Traverse folder hierarchy up to the root
+                do {
+                    var colsb = ["Name", "ID", "ParentFolder.ID"];
+                    var filterb = {
+                        Property: "ID",
+                        SimpleOperator: "equals",
+                        Value: findCatID
+                    };
+                    var descb = prox.retrieve("DataFolder", colsb, filterb);
+        
+                    if (descb && descb.Results.length > 0) {
+                        var folder = descb.Results[0];
+                        path.unshift(folder.Name); // Prepend folder name to path
+                        findCatID = folder.ParentFolder.ID; // Move to parent folder
+                    } else {
+                        break; // No further parent folder found
+                    }
+                } while (findCatID && findCatID != "0");
+        
+                // Return folder path string or fallback message
+                return path.length > 0 ? "/" + path.join(" > ") : "⚠️ Path not available";
+            }
+        
+            Write("</div>");
+</script>
+    
+</body>
+</html>
+    
